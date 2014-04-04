@@ -1,0 +1,10 @@
+parse.obs+scan.obs+memory.obs+main.obs+hash.obs+
+execute.obs+code.obs+da.obs+error.obs+init.obs+
+bi_vars.obs+cast.obs+print.obs+bi_funct.obs+kw.obs+
+jmp.obs+array.obs+field.obs+split.obs+re_cmpl.obs+
+zmalloc.obs+fin.obs+files.obs+scancode.obs+matherr.obs+
+fcall.obs+version.obs+setargv.obj+dosexec.obs+xdosexec.obj
+mawk/noe/noi/stack:4096
+
+rexp\regexp.lib
+;

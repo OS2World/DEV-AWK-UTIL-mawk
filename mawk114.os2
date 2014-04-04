@@ -1,0 +1,44 @@
+
+   mawk for OS/2
+   -------------
+   This is a port of mawk version 1.1.4 the very good (!) AWK
+   interpreter by Michael D. Brennan ( @boeing.com ). The archive
+   'mawk-114.zip' contains the original source distribution as obtained
+   from oxy.edu:/public together with patched files in the directory
+   mawk114/os2. mawk was ported using gcc/emx08f.
+
+   How to install mawk:
+   --------------------
+   Copy mawk.exe into a directory contained in the PATH variable.
+   If you do not have the emx*.dll libraries of emx version 0.8f
+   installed on your machine copy them from mawk114/os2/dll to
+   \os2\dll or another directory in the LIBPATH.
+
+   How to compile mawk:
+   --------------------
+   - Go to directory mawk114/os2 and run conf_os2.cmd. This will copy
+     the patched files to their respective directories.
+   - Go to mawk114/rexp and   dmake -f makefile.os2
+   - Go to mawk114 and decide whether to rebuild parse.c from parse.y
+     ( requires bison or yacc ! ). If you wish to remake parse.c then
+     delete the existing file parse.c.
+     Then change absolute directory names in makefile.os2 and
+     dmake -f makefile.os2.
+
+   Features of the port:
+   ---------------------
+   - mawk for OS/2 passes the tests in the directory mawk114/test
+
+   - Behaviour of ' and " on the command line is adapted to OS/2
+     shells: " encloses a command line progam, ' a string within the
+     program; e.g.:  mawk "BEGIN{print 'Hullo Mr. Beebe!'}".
+
+   - mawk can be used as an external command processor via the
+     EXTPROC feature of OS/2.
+
+   - By default mawk clandestinely strips CRs from the input when
+     reading and emits CRs together with LFs when writing. In the MSDOS
+     version CR control may be turned off with the BINMODE feature of
+     mawk. This is not yet implemented in the OS/2 version.
+
+     Ulf Griesmann   ugr@lsr.ph.ic.ac.uk

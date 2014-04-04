@@ -1,0 +1,115 @@
+
+This file describes the changes from mawk 1.0 to mawk 1.1
+
+
+------------------------------------------------------
+CHANGES dictated by posix requirements:
+
+command line:
+
+  -f file      program can come from multiple -f options
+  -v var=value     assignment *before* BEGIN execution
+
+  all implementation dependent options are arguments to -W
+
+  -W version 	replaces -V
+  -W dump	replaces -D
+  -W sprintf=number     enlarges sprintf buffer to number bytes
+  -W posix_space	forces mawk not to consider '\n' space
+
+
+new builtin variables:
+
+  CONVFMT used for internal conversion from number to
+  string, initially = "%.6g"
+
+     to convert x to string if x is exact integer
+	
+	x <- sprintf("%d", x)
+
+	else
+
+	x <- sprintf(CONVFMT, x)
+
+
+  output still uses OFMT except exact integers use "%d"
+
+
+  ENVIRON[] array holds inherited environment.  Changes are *not*
+  passed to commands executed by mawk.
+
+
+new functions:
+
+   toupper()
+   tolower()
+
+
+/regexpr/    can be used anywhere in the program as an expression,
+
+so
+
+      if ( /^A.*B/ ) {....}
+
+is the same as
+
+      if ( $0 ~ /^A.*B/ ) {....}
+
+
+printf and sprintf are ANSI C compatible, you can for example
+
+     printf "%-#0*.*lX", 20,6 , x
+
+
+     (mawk passes printf and sprintf to printf(3) and sprintf(3)
+      so real ansi compatibility requires an ANSI C library.)
+
+RS == ""  now strips blank lines from the front and back of 
+      each file, and then acts the same as RS = "\n\n+"
+
+------------------------------------------------------------
+Non posix changes:
+
+
+    print or printf > "/dev/stderr"   writes to stderr
+    (taken from gawk)
+
+
+Hardwired limits are mostly gone for example if you have enough
+memory you can dynamically allocate up to 32K fields 
+(or more by adjusting defines in sizes.h)
+
+---------------------------------------------------------------
+
+I "fixed" some things that in hindsight I thought I did wrong the
+first time.
+
+     array storage is different.
+     program flow is entirely controlled in execute().
+     there are some new op codes
+     grammar is a little cleaner
+
+---------------------
+
+DOS:  
+
+   1) under command.com for programs from the command line
+   The use of " and ' is reversed.  This makes batch files
+   easier at the cost of some quote dyslexia.
+
+
+   Unix:  mawk '/foo/{print "bar"}'
+
+
+   DOS :   mawk "/foo/{print 'bar'}"
+
+       but only from the command line, not from files
+
+       mawk -f con
+       /fool/{print "bar"}
+       ^Z
+
+   2) System() and pipes, so DOS mawk is now fully compatible with
+   unix mawk.
+
+

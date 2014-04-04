@@ -1,0 +1,125 @@
+
+
+Mawk has been compiled and tested successfully in the following
+Unix or Unix like environments.
+All were compiled with cc, those marked were
+also compiled with gcc.  The script build_mawk recognizes
+the systems in the left column of the following table.
+
+system				compiler (cc and ...)
+
+sun_os40 			gcc
+sun3_os40_no68881
+sun_os41			gcc
+sun3_os41_no68881
+
+ultrix42_mips
+ultrix41_mips			gcc 
+ultrix41_vax
+ultrix31_vax
+
+bsd43_vax			gcc
+
+sysV				gcc
+sysVsco				gcc
+sysV_ieeefp
+sysVr4i386			gcc rcc
+xenix_r2
+stardentVr3
+
+dynix
+mips
+next				cc is gcc
+sgi
+aix
+convex
+coherent
+
+386bsd
+linux
+
+atarist				cross compile with gcc
+
+
+To make mawk on one of these systems, run
+
+	build_mawk  system  [CC=your_cc]
+
+(build_mawk is a Bourne shell script(/bin/sh))
+
+V7:  This port is the work of Carl Mascott.  You'll need to read
+his notes and use the .v7 Makefiles
+
+
+Apollo SR10.3: This used to work, but they changed compilers and
+mawk will no longer compile because  p++->f does not compile
+correctly.  The offending compiler is CC6.8.
+
+
+NOTES:
+
+
+sun_os40
+sun3_os40_no68881
+
+	sun 3/[56]0 running SunOS4.0.3
+	sun4/110 , 4/280   OS4.0.3
+
+sun_os41
+	sparc station 1
+
+sun3_os41_no68881
+	never really tested, same as sun_os41 except 
+	does not set -f68881 flag for cc
+
+sysV
+	tested on ESIX System 5.3.2 Rev D, using gcc 1.39
+
+sysVsco 
+	tested on SCO UNIX R3.2.2 , cc and gcc(1.40)
+	this is the same as sysV except it caters to SCO's 
+	ranlib strangeness
+
+sysV_ieeefp
+	This should but probably won't work for any sysV with
+	IEEE754 floating point.  i386 and i486 fall in this
+	category,  but if SCO and ESIX are typical, somebody
+	forgot to rewrite libm to handle INF and NAN.
+
+	If you try it -- if it doesn't work fpe_test will catch the
+	problem and then use sysV.
+
+	tested and failed on SCO UNIX R3.2v2.0
+	tested and failed on ESIX
+	because the
+	math library is not up to speed
+
+	(Aside: if I had a 387 or 486 and libm didn't support it
+	 I'd howl long and loud to my vendor.  SunOS and 
+	 Ultrix (mips) both run on IEEE754 hardware and the
+	 math libraries support the IEEE754 standard )
+
+sysVr4i386
+	Tested on ESIX and Consensys.
+
+stardentVr3
+	tested on stardent 3000.   Mips processors and traps are off
+	by default.
+	Doesn't have fpsetmask() so don't use sysV_ieeefp.
+
+dynix  
+	Sequent symmetry
+
+mips
+   	MIPS M2000 	C 2.20 (4.52)
+
+next
+	Next OS 2.1
+
+sgi	
+	IRIX 4.0.1
+
+aix
+	RS/6000		running AIX 3.1
+atarist
+	atari ST/StE/TT series with gcc

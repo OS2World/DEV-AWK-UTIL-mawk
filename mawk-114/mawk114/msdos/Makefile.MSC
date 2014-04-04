@@ -1,0 +1,143 @@
+# Microsoft C 6.0A makefile for mawk,
+# an implementation of The AWK Programming Language, 1988.
+# 
+# This makefile requires Microsoft C's NMAKE program
+
+####################################
+# user settable macros
+#
+
+CFLAGS = -O -Gs
+
+# if you don't change parse.y or parse2.xc
+# then you can use the parse.c and parse.h provided and don't need yacc
+# The parse.c and parse.h in the distribution were made with
+# Berkeley yacc, which is freely available for MSDOS
+
+YACC=byacc -d
+
+####################################
+# rules for making small-memory and large-memory object files
+#
+.c.obs:
+	cl $(CFLAGS) -Os -AS -c -Fo$@ $<
+.c.obl:
+	cl $(CFLAGS) -AL -DHAVE_SMALL_MEMORY=0 -c -Fo$@ $<
+
+#######################################
+
+OBS=parse.obs scan.obs memory.obs main.obs hash.obs execute.obs code.obs\
+  da.obs error.obs init.obs bi_vars.obs cast.obs print.obs bi_funct.obs\
+  kw.obs jmp.obs array.obs field.obs  split.obs re_cmpl.obs zmalloc.obs\
+  fin.obs files.obs  scancode.obs matherr.obs  fcall.obs version.obs\
+  xdosexec.obj dosexec.obs
+
+OBL=parse.obl scan.obl memory.obl main.obl hash.obl execute.obl code.obl\
+  da.obl error.obl init.obl bi_vars.obl cast.obl print.obl bi_funct.obl\
+  kw.obl jmp.obl array.obl field.obl  split.obl re_cmpl.obl zmalloc.obl\
+  fin.obl files.obl  scancode.obl matherr.obl  fcall.obl version.obl\
+  dosexec.obl
+
+REXP_C=rexp/rexp.c rexp/rexp0.c rexp/rexp1.c rexp/rexp2.c\
+    rexp/rexp3.c rexp/rexpdb.c
+
+all: mawk.exe bmawk.exe
+
+mawk.exe : $(OBS)  rexp/regexp.lib
+	link @msdos\mawkmsc.lnk
+
+bmawk.exe : $(OBL)  rexp/lregexp.lib
+	link @msdos\bmawkmsc.lnk
+
+test : mawk.exe  # test that we have a sane mawk
+	copy mawk.exe test\mawk.exe
+	cd test
+	@echo you may have to run the test manually
+	-mawk_tes
+	del mawk.exe
+	cd ..
+
+fpe_test :  mawk.exe # test FPEs are handled OK
+	copy mawk.exe test\mawk.exe
+	@echo testing floating point exception handling
+	cd test
+	@echo you may have to run the test manually
+	-fpe_test
+	del mawk.exe
+	cd ..
+
+rexp/regexp.lib :  $(REXP_C)
+	cd rexp
+	nmake "CFLAGS=$(CFLAGS) -DMAWK"
+	cd ..
+
+rexp/lregexp.lib :  $(REXP_C)
+	cd rexp
+	nmake "CFLAGS=$(CFLAGS) -DMAWK -DLMDOS" lregexp.lib
+	cd ..
+
+###########################
+# uncomment this after checking file times are OK
+#parse.c  : parse.y  parse2.xc
+#	@echo  expect 4 shift/reduce conflicts
+#	$(YACC)  parse.y
+#	cat  y_tab.c parse2.xc > parse.c && del y_tab.c
+#	-if cmp -s y_tab.h parse.h ;\
+#	   then del y_tab.h ;\
+#	   else mv y_tab.h parse.h ; fi
+
+
+scancode.c :  makescan.c  scan.h
+	$(CC) -o makescan.exe  makescan.c
+	makescan.exe > scancode.c
+	del makescan.exe
+
+xdosexec.obj : xdosexec.see
+	$(CC) -o see2obj.exe  see2obj.c
+	see2obj.exe < xdosexec.see > xdosexec.obj
+	del see2obj.exe
+
+# xdosexec.obj : xdosexec.asm
+#	masm /mx /z xdosexec.asm ;
+
+clean :
+	del *.obs
+	del xdosexec.obj
+	del rexp/*.obs
+	del rexp/regexp.lib
+	del *.obl
+	del rexp/*.obl
+	del rexp/lregexp.lib
+	del test/mawk.exe
+
+config.h : config\msc_dos.h
+	copy config\msc_dos.h config.h
+
+
+array.obs array.obl : bi_vars.h sizes.h zmalloc.h memory.h types.h field.h mawk.h config.h symtype.h config/Idefault.h
+bi_funct.obs bi_funct.obl : fin.h bi_vars.h sizes.h memory.h zmalloc.h regexp.h types.h field.h repl.h files.h bi_funct.h mawk.h config.h symtype.h init.h config/Idefault.h
+bi_vars.obs bi_vars.obl : bi_vars.h sizes.h memory.h zmalloc.h types.h field.h mawk.h config.h symtype.h config/Idefault.h init.h
+cast.obs cast.obl : parse.h sizes.h memory.h zmalloc.h types.h field.h scan.h repl.h mawk.h config.h symtype.h config/Idefault.h
+code.obs code.obl : sizes.h memory.h zmalloc.h types.h field.h code.h jmp.h mawk.h config.h symtype.h config/Idefault.h init.h
+da.obs da.obl : sizes.h memory.h zmalloc.h types.h field.h repl.h code.h bi_funct.h mawk.h config.h symtype.h config/Idefault.h
+error.obs error.obl : parse.h bi_vars.h sizes.h types.h scan.h mawk.h config.h symtype.h config/Idefault.h
+execute.obs execute.obl : bi_vars.h fin.h sizes.h memory.h zmalloc.h regexp.h types.h field.h code.h repl.h bi_funct.h mawk.h config.h symtype.h config/Idefault.h
+fcall.obs fcall.obl : sizes.h memory.h zmalloc.h types.h code.h mawk.h config.h symtype.h config/Idefault.h
+field.obs field.obl : parse.h bi_vars.h sizes.h memory.h zmalloc.h regexp.h types.h field.h scan.h repl.h mawk.h config.h symtype.h config/Idefault.h init.h
+files.obs files.obl : fin.h sizes.h memory.h zmalloc.h types.h files.h mawk.h config.h config/Idefault.h
+fin.obs fin.obl : parse.h fin.h bi_vars.h sizes.h memory.h zmalloc.h types.h field.h scan.h mawk.h config.h symtype.h config/Idefault.h
+hash.obs hash.obl : sizes.h memory.h zmalloc.h types.h mawk.h config.h symtype.h config/Idefault.h
+init.obs init.obl : bi_vars.h sizes.h memory.h zmalloc.h types.h field.h code.h mawk.h config.h symtype.h config/Idefault.h init.h
+jmp.obs jmp.obl : sizes.h memory.h zmalloc.h types.h code.h mawk.h jmp.h config.h symtype.h config/Idefault.h init.h
+kw.obs kw.obl : parse.h sizes.h types.h mawk.h config.h symtype.h config/Idefault.h init.h
+main.obs main.obl : fin.h bi_vars.h sizes.h memory.h zmalloc.h types.h field.h code.h files.h mawk.h config.h symtype.h config/Idefault.h init.h
+makescan.obs makescan.obl : parse.h scan.h symtype.h
+matherr.obs matherr.obl : sizes.h types.h mawk.h config.h config/Idefault.h
+memory.obs memory.obl : sizes.h memory.h zmalloc.h types.h mawk.h config.h config/Idefault.h
+parse.obs parse.obl : bi_vars.h sizes.h memory.h zmalloc.h types.h field.h code.h files.h bi_funct.h mawk.h jmp.h config.h symtype.h config/Idefault.h
+print.obs print.obl : bi_vars.h parse.h sizes.h memory.h zmalloc.h types.h field.h scan.h files.h bi_funct.h mawk.h config.h symtype.h config/Idefault.h
+re_cmpl.obs re_cmpl.obl : parse.h sizes.h memory.h zmalloc.h regexp.h types.h scan.h repl.h mawk.h config.h symtype.h config/Idefault.h
+scan.obs scan.obl : parse.h fin.h sizes.h memory.h zmalloc.h types.h field.h scan.h repl.h code.h files.h mawk.h config.h symtype.h config/Idefault.h init.h
+split.obs split.obl : bi_vars.h parse.h sizes.h memory.h zmalloc.h regexp.h types.h field.h scan.h bi_funct.h mawk.h config.h symtype.h config/Idefault.h
+version.obs version.obl : patchlev.h sizes.h types.h mawk.h config.h config/Idefault.h
+zmalloc.obs zmalloc.obl : sizes.h zmalloc.h types.h mawk.h config.h config/Idefault.h

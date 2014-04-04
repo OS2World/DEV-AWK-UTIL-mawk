@@ -1,0 +1,14 @@
+
+The port of mawk to the Mac is the work of an anonymous
+reviewer for comp.sources.reviewed.
+
+The parse.c and parse.h provided in the distribution won't
+work because the data exceeds 32K, so you need to make
+parse.c with a different yacc parser.  Options and how
+to do it are in the unix Makefile.
+
+(The parse.c in 1.1 might work as the data is smaller.  I
+don't have access to MAC.  Feedback on this is welcome.)
+
+
+system() and pipes are missing from MacMAWK.

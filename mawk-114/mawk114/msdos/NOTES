@@ -1,0 +1,177 @@
+Notes for 1.1.2d
+
+  Three changes specific to DOS.
+
+  (1) Internal conversions from doubles to strings that are integers
+  use internal conversion to long so DOS and unix now give the same
+  output.  E.g.
+
+	  '{ print 2^30 }'
+
+           1073741824  (instead of  ).
+
+  (2) Large model uses 8K as opposed to 4K I/O buffers.
+
+  (3) MAWKSHELL is no longer required.  If not set in the 
+  environment, MAWKSHELL defaults to %COMSPEC% /c, e.g., if
+  comspec is
+
+	   c:\system\command.com
+
+  then this has the effect of setting MAWKSHELL to
+
+	   c:\system\command.com /c
+
+  Comspec should give a full drive-path specification.
+
+
+Notes for MsDOS (mawk 1.1)
+---------------
+
+command.com doesn't understand ' so if you use command.com as your
+shell (the norm under DOS) then on the command line (and NOT from
+files) the meanings of " and ' are reversed.
+
+	mawk "{ print 'hello world' }"
+
+If this seems too weird, use
+
+	mawk -f con
+	{ print "hello world" }
+	^Z
+
+If you use a DOS shell that gives you a Unix style command line, to use 
+it you'll need to provide a C function reargv() that retrieves argc and 
+argv[] from your shell.
+
+To enable system and pipes you need to tell mawk about your shell by
+setting the environment variable MAWKSHELL.  E.g, with command.com
+
+      set MAWKSHELL=c:\sys\command.com /c
+
+or with a unix like shell
+
+      set MAWKSHELL=c:\bin\sh.exe -c
+
+in your autoexec.bat.  The full path with drive and extension and
+appropriate switch is required.  (Small model is a tight squeeze
+and there's not enought room for PATH searching code.)
+
+If you want to use a ram disk for the pipes, set MAWKTMPDIR.
+
+      set MAWKTMPDIR=d:\
+
+The trailing backslash is required.  You have to set MAWKSHELL,
+MAWKTMPDIR is optional -- defaulting to the current directory.
+
+
+For compatibility with Unix, CR are silently stripped from input and LF 
+silently become CRLF on output.  Also ^Z indicates EOF on input (
+evidently for compatibility with CPM!!!).
+
+CR control can be turned off, with a new variable BINMODE.
+BINMODE defaults to 0.
+
+     BINMODE = 1 gives binary input.
+     BINMODE = 2 gives binary output.
+     BINMODE = 3 gives both.
+
+Setting BINMODE with -v or in the BEGIN section affects all
+files, otherwise it only affects files opened after the 
+assignment to BINMODE.  Once a file is open, later assignment to
+BINMODE does not affect it.  Note that with binary output, printf
+will behave strangely -- you'll need to explicitly use \r
+
+  Eg    mawk -v BINMODE=2 '{ printf "%d %s\r\n", NR, $0}'
+
+Assignment to BINMODE does not change RS or ORS; however there is
+a -W feature 
+
+   -W BINMODE=1   is the same as
+   -v BINMODE=1 -v RS="\r\n" or BEGIN{BINMODE=1 ; RS = "\r\n" }
+
+   -W BINMODE=2   is the same as
+   -v BINMODE=2 -v ORS="\r\n" or BEGIN{BINMODE=2 ; ORS = "\r\n" }
+
+   -W BINMODE=3  is the same as
+   -v BINMODE=3 -v RS=ORS="\r\n" or BEGIN{BINMODE=2 ; RS=ORS = "\r\n" }
+
+
+Setting MAWKBINMODE in the environment is the same as using -W,
+except its permanent.
+If you rarely have to deal with text files that contain ^Z,
+then setting MAWKBINMODE=1 in the environment would speed up input
+slightly.
+
+
+----------------------------------------------------------
+WARNING: If you write an infinite loop that does not print to the 
+screen, then you will have to reboot.  For example 
+
+	x = 1 
+	while( x < 10 )  A[x] = x
+	x++
+
+By mistake the x++ is outside the loop.  What you need to do is type 
+control break and the keyboard hardware will generate an interrupt and 
+the operating system will service that interrupt and terminate your 
+program, but unfortunately MsDOS does not have such a feature.  
+
+
+how to make mawk under MsDOS
+---------------------------
+
+   Rename Makefile Makefile.unx
+   Move or copy msdos\dosexec.c to source directory
+
+TurboC: Move msdos\Makefile.tcc to Makefile
+	copy msdos\tcc_dos.h to config.h
+
+MSC:    Move msdos\Makefile.MSC to Makefile
+
+Assuming you keep the same directory structure:
+
+1)  If you want a Unix style command line for mawk, you'll need to
+    write a function called reargv(int *, char ***) which passes
+    mawk the modified argc and argv via reargv(&argc,&argv).
+    Put it in a file called reargv.c
+
+    The supplied reargv.c works with POLYSHELL by Polytron; for a
+    different shell you could use it as an example.
+    (I've looked at the MKS documentation and writing reargv() for
+     MKS ksh would be easy.  (contributions welcome)).
+
+2)  TurboC look at comments in Makefile.  Remember to remove
+    .obj between make of bmawk.exe and mawk.exe.
+
+
+3) Using MSC , move Makefile.MSC to mawk directory and
+   run nmake -- makes both small and large model
+
+
+4)  YACC --
+Take some care that you don't trash parse.[ch] unless you're
+sure you want to remake them.
+(If using a make, also check that the date of parse.c is
+newer than parse.y or parse2.xc)
+If you don't change parse.y, the parse.c and parse.h provided
+were made with Berkeley yacc and can be redistributed and you
+don't need a yacc.  The executables look bigger than before,
+but I reuse the parser table memory which returns 15K to the
+mem pool.
+
+5)  The same test suite that is run on mawk under Unix can now
+be run under DOS.  The same anonymous reviewer wrote  batch
+files mawktest.bat and fpe_test.bat.
+
+
+
+POSSIBLE PROBLEMS:
+
+1) Hopefully you can compile for speed and still fit the code
+in 64K.  If not set your compiler switches to compile for 
+optimized (ie small) size.
+
+2)  MSC 5.1 requires /Os and /Gs for small model to fit in 64K.
+Reports indicate this is also true with 6.0.
+

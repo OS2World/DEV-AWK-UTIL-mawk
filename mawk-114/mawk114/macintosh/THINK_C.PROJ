@@ -1,0 +1,56 @@
+The THINK C project file is a binary file, so I'm not posting one verbatim.
+Here's a synopsis of the three project files used for compiling MAWK.  The
+dashed lines indicate segment divisions.
+
+
+SCANCODE PROJECT:	makescan.c
+			----------
+			ANSI
+			----------
+			MacTraps
+			unix
+			----------
+
+REGEXP LIB PROJECT:	rexp.c
+			rexp0.c
+			rexp1.c
+			rexp2.c
+			rexp3.c
+			rexpdb.c
+			----------
+
+MAWK PROJECT:		array.c
+			bi_funct.c
+			bi_vars.c
+			cast.c
+			code.c
+			da.c
+			error.c
+			execute.c
+			fcall.c
+			field.c
+			files.c
+			fin.c
+			hash.c
+			init.c
+			jmp.c
+			kw.c
+			main.c
+			matherr.c
+			memory.c
+			----------
+			print.c
+			re_cmpl.c
+			scan.c
+			scancode.c
+			split.c
+			version.c
+			zmalloc.c
+			----------
+			parse.c
+			----------
+			ANSI
+			unix
+			----------
+			MacTraps
+			----------

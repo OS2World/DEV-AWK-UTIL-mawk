@@ -1,0 +1,71 @@
+
+how to install mawk on Unix like OS
+--------------------
+
+STEP 0:  Read the file UCONFIG.  If your system is there or
+something close enough you only need run
+
+       build_mawk  your_system  [CC=your_compiler]
+
+	
+(Build_mawk is a shell script with a first line of #!/bin/sh ; on 
+some systems, csh users may need to
+
+	/bin/sh build_mawk your_system [CC=your_compiler]
+)
+
+
+Build_mawk will produce from Makefile.in a Makefile for your_system
+and then execute make which will make the mawk executable.
+
+	make install
+
+is a separate step with user settable macros for the target
+directories inside the Makefile.
+
+
+else
+
+
+how to install on a new system
+------------------------------
+
+STEP 1:
+You need to link or copy a .h file in mawk/config, that describes your 
+configuration, to the mawk directory and name it config.h.  
+
+First look at the file mawk/config/generic.h.  This file describes the 
+most common situations.  If it describes your machine and system, then 
+use it.  If not, you need to make a .h for your system.  You only need 
+to make defines that describe how you differ from the description in 
+generic.h.  The other .h's in config should serve as sufficient 
+examples.  Also look at template.h 
+
+STEP2:
+In the mawk directory, run build_mawk MF.  This will give you a
+generic Makefile which you can adjust the user macros.
+
+STEP3:
+Run make.  If mawk successfully compiles, two tests will be run on mawk.
+The first, in the shell script test/mawk_test, will see if mawk is 
+running correctly under normal conditions and the second, test/fpe_test,
+will produce floating point exceptions to see if mawk handles things 
+like division by zero correctly.  
+
+Failing the first test means your source files are corrupted,
+or mawk has a bug uncovered by the new environment.
+
+Failing the second means adjustments need to be made to floating point 
+definitions in your config.h.  
+
+
+If you make a new config.h or add a new machine to an existing config.h,
+send me the new or cdiffs for the old.  If things just won't work, send 
+me the config.h and the error messages and I'll try to figure out what's
+wrong.  
+
+Mike Brennan
+brennan@boeing.com
+24048 146 PL SE
+Kent WA 98042
+

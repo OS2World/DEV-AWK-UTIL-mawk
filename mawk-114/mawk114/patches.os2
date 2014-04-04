@@ -1,0 +1,209 @@
+diff -C 2 ./bi_funct.c .\os2/bi_funct.c
+*** ./bi_funct.c	Tue Jan 26 17:04:06 1993
+--- ./os2/bi_funct.c	Sat Apr 24 13:48:04 1993
+***************
+*** 40,43 ****
+--- 40,44 ----
+  #include "regexp.h"
+  #include "repl.h"
++ #include <stdlib.h>
+  #include <math.h>
+  
+***************
+*** 523,526 ****
+--- 524,528 ----
+    register CELL *sp ;
+  { int x ;
++   char *shell;
+  
+    if ( sp->type < C_STRING ) cast1_to_s(sp) ;
+***************
+*** 551,557 ****
+  
+      case  0  :  /* the child */
+         (void) execl(shell, shell, "-c", string(sp)->str, (char *) 0) ;
+!        /* if get here, execl() failed */
+         errmsg(errno, "execute of %s failed", shell) ;
+         fflush(stderr) ;
+         _exit(127) ;
+--- 553,564 ----
+  
+      case  0  :  /* the child */
++ #ifdef OS2
++        shell = getenv( "COMSPEC" );
++        (void) execl(shell, shell, "/C", string(sp)->str, (char *) 0) ;
++ #else
+         (void) execl(shell, shell, "-c", string(sp)->str, (char *) 0) ;
+! #endif
+         errmsg(errno, "execute of %s failed", shell) ;
++        /* if get here, execl() failed */
+         fflush(stderr) ;
+         _exit(127) ;
+diff -C 2 ./files.c .\os2/files.c
+*** ./files.c	Wed Dec 16 18:48:00 1992
+--- ./os2/files.c	Sat Apr 24 13:47:36 1993
+***************
+*** 40,43 ****
+--- 40,44 ----
+  #include "memory.h"
+  #include "fin.h"
++ #include <stdlib.h>
+  
+  static FILE  *PROTO(tfopen, (char*,char*)) ;
+***************
+*** 290,295 ****
+  #endif /* ! HAVE_REAL_PIPES */
+  
+! /* hardwire to /bin/sh for portability of programs */
+! char *shell = "/bin/sh" ;
+  
+  #if  HAVE_REAL_PIPES
+--- 291,296 ----
+  #endif /* ! HAVE_REAL_PIPES */
+  
+! char *shell;           /* e.g. c:\\os2\\cmd.exe */
+! char *command_opt ;    /*  " /C"  */
+  
+  #if  HAVE_REAL_PIPES
+***************
+*** 318,323 ****
+--- 319,330 ----
+          (void) dup( remote_fd ) ;
+          (void) close( remote_fd ) ;
++ #ifdef OS2
++         shell = getenv( "COMSPEC" );
++         (void) execl(shell, shell, "/C", name, (char *) 0 ) ;
++         errmsg(errno, "failed to exec %s /C %s" , shell, name) ;
++ #else
+          (void) execl(shell, shell, "-c", name, (char *) 0 ) ;
+          errmsg(errno, "failed to exec %s -c %s" , shell, name) ;
++ #endif
+          fflush(stderr) ;
+          _exit(128) ;
+diff -C 2 ./init.c .\os2/init.c
+*** ./init.c	Wed Dec 23 17:58:18 1992
+--- ./os2/init.c	Thu Jul 01 13:09:16 1993
+***************
+*** 77,81 ****
+  #endif 
+  
+! #if   MSDOS  
+    { char *p = getenv("MAWKBINMODE") ;
+  
+--- 77,81 ----
+  #endif 
+  
+! #if   MSDOS
+    { char *p = getenv("MAWKBINMODE") ;
+  
+***************
+*** 183,187 ****
+  	      }
+  	    }
+! #if  MSDOS  
+  	    else
+  	    if ( optarg[0] == 'B' )
+--- 183,187 ----
+  	      }
+  	    }
+! #if  MSDOS
+  	    else
+  	    if ( optarg[0] == 'B' )
+***************
+*** 267,275 ****
+      set_ARGV(argc, argv, i+1) ;
+  
+! #if  MSDOS && ! HAVE_REARGV  /* reversed quotes */
+      { char *p ;
+  
+        for( p = argv[i] ; *p ; p++ )
+! 	 if ( *p == '\'' )  *p = '\"' ;
+      }
+  #endif
+--- 267,275 ----
+      set_ARGV(argc, argv, i+1) ;
+  
+! #if ( MSDOS || OS2 ) && ! HAVE_REARGV  /* reversed quotes */
+      { char *p ;
+  
+        for( p = argv[i] ; *p ; p++ )
+!       if ( *p == '\'' )  *p = '\"' ;
+      }
+  #endif
+diff -C 2 ./main.c .\os2/main.c
+*** ./main.c	Thu Jan 14 19:33:44 1993
+--- ./os2/main.c	Thu Jul 01 13:10:58 1993
+***************
+*** 44,48 ****
+    int argc ; char **argv ;
+  { 
+! 
+    initialize(argc, argv) ;
+  
+--- 44,48 ----
+    int argc ; char **argv ;
+  { 
+!   _wildcard( &argc, &arcv );
+    initialize(argc, argv) ;
+  
+Common subdirectories: ./rexp and .\os2/rexp
+diff -C 2 ./scan.c .\os2/scan.c
+*** ./scan.c	Thu Jan 14 19:33:50 1993
+--- ./os2/scan.c	Thu Jul 01 12:48:24 1993
+***************
+*** 41,45 ****
+--- 41,47 ----
+  #include  "repl.h"
+  #include  "code.h"
++ #include  <string.h>
+  
++ 
+  #if HAVE_FCNTL_H
+  #include  <fcntl.h>
+***************
+*** 68,73 ****
+  PFILE *pfile_list ;
+  static  unsigned char *buffer ;
+! static  unsigned char *buffp ;  
+      /* unsigned so it works with 8 bit chars */
+  static  int  program_fd   ; 
+  static  int  eof_flag ;
+--- 70,80 ----
+  PFILE *pfile_list ;
+  static  unsigned char *buffer ;
+! static  unsigned char *buffp ;
+      /* unsigned so it works with 8 bit chars */
++ #if OS2
++ static  unsigned char line[10];
++ static  unsigned char *cp;
++ static  int  idx;
++ #endif
+  static  int  program_fd   ; 
+  static  int  eof_flag ;
+***************
+*** 95,98 ****
+--- 102,125 ----
+  
+    eat_nl() ; /* scan to first token */
++ #if OS2                      /* look if first token in program is 'extproc' */
++   cp = buffp;                /* get a pointer to inspect buffer contents */
++   idx = 0;
++   while ( (*cp != ' ') && (idx < 8 ) )  /* copy first token into line buffer */
++   {  
++      line[idx] = ((*cp>='a') && (*cp<='z')) ? *cp+'A'-'a' : *cp;
++      idx++;
++      cp++;
++   }
++   if ( idx < 8 )
++   {
++      line[idx] = '\0';
++      if ( strstr( line, "EXTPROC" ) )  /* then skip this line */
++      {
++         while ( *buffp != '\n' )
++            buffp++;
++         eat_nl();
++      }
++   }
++ #endif
+    if ( next() == 0 ) { errmsg(0, "no program") ; mawk_exit(1) ; }
+    un_next() ;
